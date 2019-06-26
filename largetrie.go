@@ -121,9 +121,9 @@ func (rt *TrieRoutingTable) ListPeers() []peer.ID {
 }
 func (rt *TrieRoutingTable) Print() {}
 
-func (rt *TrieRoutingTable) SetPeerAdded(fn func(id peer.ID)) {
+func (rt *TrieRoutingTable) SetPeerAddedCB(fn func(id peer.ID)) {
 	rt.PeerAdded = fn
 }
-func (rt *TrieRoutingTable) SetPeerRemoved(fn func(id peer.ID)) {
+func (rt *TrieRoutingTable) SetPeerRemovedCB(fn func(id peer.ID)) {
 	rt.PeerRemoved = fn
 }

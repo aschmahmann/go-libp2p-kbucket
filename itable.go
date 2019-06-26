@@ -15,8 +15,8 @@ type IRoutingTable interface {
 	Size() int
 	ListPeers() []peer.ID
 	Print()
-	SetPeerAdded(func(peer.ID))
-	SetPeerRemoved(func(peer.ID))
+	SetPeerAddedCB(func(peer.ID))
+	SetPeerRemovedCB(func(peer.ID))
 }
 
 type RoutingTable struct {
@@ -24,13 +24,13 @@ type RoutingTable struct {
 }
 
 func (rt *RoutingTable) Update(p peer.ID) (evicted peer.ID, err error) {return rt.tb.Update(p)}
-func (rt *RoutingTable) Remove(p peer.ID) {rt.tb.Remove(p)}
-func (rt *RoutingTable) Find(id peer.ID) peer.ID {return rt.tb.Find(id)}
-func (rt *RoutingTable) NearestPeer(id ID) peer.ID {return rt.tb.NearestPeer(id)}
-func (rt *RoutingTable) NearestPeers(id ID, count int) []peer.ID {return rt.tb.NearestPeers(id, count)}
-func (rt *RoutingTable) Size() int {return rt.tb.Size()}
-func (rt *RoutingTable) ListPeers() []peer.ID {return rt.tb.ListPeers()}
-func (rt *RoutingTable) Print() {rt.tb.Print()}
-func (rt *RoutingTable) SetPeerAdded(fn func(peer.ID)) {rt.tb.SetPeerAdded(fn)}
-func (rt *RoutingTable) SetPeerRemoved(fn func(peer.ID)) {rt.tb.SetPeerRemoved(fn)}
+func (rt *RoutingTable) Remove(p peer.ID)                              {rt.tb.Remove(p)}
+func (rt *RoutingTable) Find(id peer.ID) peer.ID                       {return rt.tb.Find(id)}
+func (rt *RoutingTable) NearestPeer(id ID) peer.ID                     {return rt.tb.NearestPeer(id)}
+func (rt *RoutingTable) NearestPeers(id ID, count int) []peer.ID       {return rt.tb.NearestPeers(id, count)}
+func (rt *RoutingTable) Size() int                                     {return rt.tb.Size()}
+func (rt *RoutingTable) ListPeers() []peer.ID                          {return rt.tb.ListPeers()}
+func (rt *RoutingTable) Print()                                        {rt.tb.Print()}
+func (rt *RoutingTable) SetPeerAddedCB(fn func(peer.ID))               {rt.tb.SetPeerAddedCB(fn)}
+func (rt *RoutingTable) SetPeerRemovedCB(fn func(peer.ID))             {rt.tb.SetPeerRemovedCB(fn)}
 

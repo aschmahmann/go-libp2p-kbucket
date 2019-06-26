@@ -79,10 +79,10 @@ func TableCallbacks(t *testing.T, rt RoutingTable, rng *rand.Rand) {
 	}
 
 	pset := make(map[peer.ID]struct{})
-	rt.SetPeerAdded(func(p peer.ID) {
+	rt.SetPeerAddedCB(func(p peer.ID) {
 		pset[p] = struct{}{}
 	})
-	rt.SetPeerRemoved(func(p peer.ID) {
+	rt.SetPeerRemovedCB(func(p peer.ID) {
 		delete(pset, p)
 	})
 
