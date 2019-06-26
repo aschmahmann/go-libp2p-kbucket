@@ -82,7 +82,7 @@ func (rt *TrieRoutingTable) NearestPeers(id ID, count int) []peer.ID {
 	afterWalk := 0
 	beforeWalk := 0
 
-	peers := make([]peer.ID, 0, 40)
+	peers := make([]peer.ID, 0, count*2)
 
 	wid, _, _ := rt.trie.LongestPrefix(id)
 
@@ -103,7 +103,7 @@ func (rt *TrieRoutingTable) NearestPeers(id ID, count int) []peer.ID {
 		return beforeWalk < count
 	})
 
-	return SortClosestPeers(peers, id)
+	return SortClosestPeers(peers, id)[:count]
 }
 
 func (rt *TrieRoutingTable) Size() int {

@@ -1,6 +1,7 @@
 package kbucket
 
 import (
+	"io"
 	"math/rand"
 	"testing"
 	"time"
@@ -8,6 +9,7 @@ import (
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/test"
 	pstore "github.com/libp2p/go-libp2p-peerstore"
+	mh "github.com/multiformats/go-multihash"
 )
 
 // Test basic features of the bucket struct
@@ -48,23 +50,32 @@ func TestBucket(t *testing.T) {
 	}
 }
 
+func RandPeerIDFatal(t testing.TB, r *rand.Rand) peer.ID {
+	buf := make([]byte, 16)
+	if _, err := io.ReadFull(r, buf); err != nil {
+		t.Fatal(err)
+	}
+	h, _ :=  mh.Sum(buf, mh.SHA2_256, -1)
+	return peer.ID(h)
+}
+
 func TestTableCallbacks(t *testing.T) {
-	local := test.RandPeerIDFatal(t)
+	rng := rand.New(rand.NewSource(0))
+	local := RandPeerIDFatal(t, rng)
 	m := pstore.NewMetrics()
 
 	t.Run("KRoutingTable", func(t *testing.T) {
-		TableCallbacks(t, RoutingTable{NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)})
+		TableCallbacks(t, RoutingTable{NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 	t.Run("TrieRoutingTable", func(t *testing.T) {
-		TableCallbacks(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)})
+		TableCallbacks(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 }
 
-func TableCallbacks(t *testing.T, rt RoutingTable) {
-
+func TableCallbacks(t *testing.T, rt RoutingTable, rng *rand.Rand) {
 	peers := make([]peer.ID, 100)
 	for i := 0; i < 100; i++ {
-		peers[i] = test.RandPeerIDFatal(t)
+		peers[i] = RandPeerIDFatal(t, rng)
 	}
 
 	pset := make(map[peer.ID]struct{})
@@ -105,21 +116,21 @@ func TableCallbacks(t *testing.T, rt RoutingTable) {
 func TestTableUpdate(t *testing.T) {
 	local := test.RandPeerIDFatal(t)
 	m := pstore.NewMetrics()
+	rng := rand.New(rand.NewSource(0))
 
 	t.Run("KRoutingTable", func(t *testing.T) {
-		TableUpdate(t, RoutingTable{NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)})
+		TableUpdate(t, RoutingTable{NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 	t.Run("TrieRoutingTable", func(t *testing.T) {
-		TableUpdate(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)})
+		TableUpdate(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 }
 
 // Right now, this just makes sure that it doesnt hang or crash
-func TableUpdate(t *testing.T, rt RoutingTable) {
+func TableUpdate(t *testing.T, rt RoutingTable, rng *rand.Rand) {
 	peers := make([]peer.ID, 100)
 	for i := 0; i < 100; i++ {
-		time.Sleep(time.Millisecond)
-		peers[i] = test.RandPeerIDFatal(t)
+		peers[i] = RandPeerIDFatal(t, rng)
 	}
 
 	// Testing Update
@@ -128,8 +139,7 @@ func TableUpdate(t *testing.T, rt RoutingTable) {
 	}
 
 	for i := 0; i < 100; i++ {
-		time.Sleep(time.Millisecond)
-		id := ConvertPeerID(test.RandPeerIDFatal(t))
+		id := ConvertPeerID(RandPeerIDFatal(t, rng))
 		ret := rt.NearestPeers(id, 5)
 		if len(ret) == 0 {
 			t.Fatal("Failed to find node near ID.")
@@ -140,20 +150,20 @@ func TableUpdate(t *testing.T, rt RoutingTable) {
 func TestTableFind(t *testing.T) {
 	local := test.RandPeerIDFatal(t)
 	m := pstore.NewMetrics()
+	rng := rand.New(rand.NewSource(0))
 
 	t.Run("KRoutingTable", func(t *testing.T) {
-		TableFind(t, RoutingTable{NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)})
+		TableFind(t, RoutingTable{NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 	t.Run("TrieRoutingTable", func(t *testing.T) {
-		TableFind(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)})
+		TableFind(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 }
 
-func TableFind(t *testing.T,  rt RoutingTable) {
+func TableFind(t *testing.T,  rt RoutingTable, rng *rand.Rand) {
 	peers := make([]peer.ID, 100)
 	for i := 0; i < 5; i++ {
-		time.Sleep(time.Millisecond)
-		peers[i] = test.RandPeerIDFatal(t)
+		peers[i] = RandPeerIDFatal(t, rng)
 		rt.Update(peers[i])
 	}
 
@@ -168,11 +178,12 @@ func TestTableEldestPreferred(t *testing.T) {
 	local := test.RandPeerIDFatal(t)
 	m := pstore.NewMetrics()
 	rt := NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)
+	rng := rand.New(rand.NewSource(0))
 
 	// generate size + 1 peers to saturate a bucket
 	peers := make([]peer.ID, 15)
 	for i := 0; i < 15; {
-		if p := test.RandPeerIDFatal(t); CommonPrefixLen(ConvertPeerID(local), ConvertPeerID(p)) == 0 {
+		if p := RandPeerIDFatal(t, rng); CommonPrefixLen(ConvertPeerID(local), ConvertPeerID(p)) == 0 {
 			peers[i] = p
 			i++
 		}
@@ -196,20 +207,20 @@ func TestTableEldestPreferred(t *testing.T) {
 func TestTableFindMultiple(t *testing.T) {
 	local := test.RandPeerIDFatal(t)
 	m := pstore.NewMetrics()
+	rng := rand.New(rand.NewSource(0))
 
 	t.Run("KRoutingTable", func(t *testing.T) {
-		TableFindMultiple(t, RoutingTable{NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)})
+		TableFindMultiple(t, RoutingTable{NewRoutingTable(20, ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 	t.Run("TrieRoutingTable", func(t *testing.T) {
-		TableFindMultiple(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)})
+		TableFindMultiple(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 }
 
-func TableFindMultiple(t *testing.T, rt RoutingTable) {
+func TableFindMultiple(t *testing.T, rt RoutingTable, rng *rand.Rand) {
 	peers := make([]peer.ID, 100)
 	for i := 0; i < 18; i++ {
-		time.Sleep(time.Millisecond)
-		peers[i] = test.RandPeerIDFatal(t)
+		peers[i] = RandPeerIDFatal(t, rng)
 		rt.Update(peers[i])
 	}
 
@@ -220,16 +231,26 @@ func TableFindMultiple(t *testing.T, rt RoutingTable) {
 	}
 }
 
-// Looks for race conditions in table operations. For a more 'certain'
-// test, increase the loop counter from 1000 to a much higher number
-// and set GOMAXPROCS above 1
 func TestTableMultithreaded(t *testing.T) {
 	local := peer.ID("localPeer")
 	m := pstore.NewMetrics()
-	tab := NewRoutingTable(20, ConvertPeerID(local), time.Hour, m)
+	rng := rand.New(rand.NewSource(0))
+
+	t.Run("KRoutingTable", func(t *testing.T) {
+		TableMultithreaded(t, RoutingTable{NewRoutingTable(20, ConvertPeerID(local), time.Hour, m)}, rng)
+	})
+	t.Run("TrieRoutingTable", func(t *testing.T) {
+		TableMultithreaded(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)}, rng)
+	})
+}
+
+// Looks for race conditions in table operations. For a more 'certain'
+// test, increase the loop counter from 1000 to a much higher number
+// and set GOMAXPROCS above 1
+func TableMultithreaded(t *testing.T, tab RoutingTable, rng *rand.Rand) {
 	var peers []peer.ID
 	for i := 0; i < 500; i++ {
-		peers = append(peers, test.RandPeerIDFatal(t))
+		peers = append(peers, RandPeerIDFatal(t, rng))
 	}
 
 	done := make(chan struct{})
@@ -262,36 +283,55 @@ func TestTableMultithreaded(t *testing.T) {
 }
 
 func BenchmarkUpdates(b *testing.B) {
-	b.StopTimer()
-	local := ConvertKey("localKey")
+	local := peer.ID("localPeer")
 	m := pstore.NewMetrics()
-	tab := NewRoutingTable(20, local, time.Hour, m)
+	rng := rand.New(rand.NewSource(0))
 
+	b.Run("KRoutingTable", func(b *testing.B) {
+		Updates(b, RoutingTable{NewRoutingTable(20, ConvertPeerID(local), time.Hour, m)}, rng)
+	})
+	b.Run("TrieRoutingTable", func(b *testing.B) {
+		Updates(b, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)}, rng)
+	})
+}
+
+func Updates(b *testing.B, rt RoutingTable, rng *rand.Rand) {
+	b.StopTimer()
 	var peers []peer.ID
 	for i := 0; i < b.N; i++ {
-		peers = append(peers, test.RandPeerIDFatal(b))
+		peers = append(peers, RandPeerIDFatal(b, rng))
 	}
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		tab.Update(peers[i])
+		rt.Update(peers[i])
 	}
 }
 
 func BenchmarkFinds(b *testing.B) {
-	b.StopTimer()
-	local := ConvertKey("localKey")
+	local := peer.ID("localPeer")
 	m := pstore.NewMetrics()
-	tab := NewRoutingTable(20, local, time.Hour, m)
+	rng := rand.New(rand.NewSource(0))
+
+	b.Run("KRoutingTable", func(b *testing.B) {
+		Finds(b, RoutingTable{NewRoutingTable(20, ConvertPeerID(local), time.Hour, m)}, rng)
+	})
+	b.Run("TrieRoutingTable", func(b *testing.B) {
+		Finds(b, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)}, rng)
+	})
+}
+
+func Finds(b *testing.B, rt RoutingTable, rng *rand.Rand) {
+	b.StopTimer()
 
 	var peers []peer.ID
 	for i := 0; i < b.N; i++ {
-		peers = append(peers, test.RandPeerIDFatal(b))
-		tab.Update(peers[i])
+		peers = append(peers, RandPeerIDFatal(b, rng))
+		rt.Update(peers[i])
 	}
 
 	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		tab.Find(peers[i])
+		rt.Find(peers[i])
 	}
 }
