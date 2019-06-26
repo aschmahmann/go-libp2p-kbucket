@@ -19,7 +19,7 @@ var ErrPeerRejectedHighLatency = errors.New("peer rejected; latency too high")
 var ErrPeerRejectedNoCapacity = errors.New("peer rejected; insufficient capacity")
 
 // RoutingTable defines the routing table.
-type RoutingTable struct {
+type KRoutingTable struct {
 
 	// ID of the local peer
 	local ID
@@ -43,8 +43,8 @@ type RoutingTable struct {
 }
 
 // NewRoutingTable creates a new routing table with a given bucketsize, local ID, and latency tolerance.
-func NewRoutingTable(bucketsize int, localID ID, latency time.Duration, m peerstore.Metrics) *RoutingTable {
-	rt := &RoutingTable{
+func NewRoutingTable(bucketsize int, localID ID, latency time.Duration, m peerstore.Metrics) *KRoutingTable {
+	rt := &KRoutingTable{
 		Buckets:     []*Bucket{newBucket()},
 		bucketsize:  bucketsize,
 		local:       localID,
@@ -58,7 +58,7 @@ func NewRoutingTable(bucketsize int, localID ID, latency time.Duration, m peerst
 }
 
 // Update adds or moves the given peer to the front of its respective bucket
-func (rt *RoutingTable) Update(p peer.ID) (evicted peer.ID, err error) {
+func (rt KRoutingTable) Update(p peer.ID) (evicted peer.ID, err error) {
 	peerID := ConvertPeerID(p)
 	cpl := CommonPrefixLen(peerID, rt.local)
 
@@ -113,7 +113,7 @@ func (rt *RoutingTable) Update(p peer.ID) (evicted peer.ID, err error) {
 
 // Remove deletes a peer from the routing table. This is to be used
 // when we are sure a node has disconnected completely.
-func (rt *RoutingTable) Remove(p peer.ID) {
+func (rt KRoutingTable) Remove(p peer.ID) {
 	peerID := ConvertPeerID(p)
 	cpl := CommonPrefixLen(peerID, rt.local)
 
@@ -131,7 +131,7 @@ func (rt *RoutingTable) Remove(p peer.ID) {
 	}
 }
 
-func (rt *RoutingTable) nextBucket() {
+func (rt KRoutingTable) nextBucket() {
 	// This is the last bucket, which allegedly is a mixed bag containing peers not belonging in dedicated (unfolded) buckets.
 	// _allegedly_ is used here to denote that *all* peers in the last bucket might feasibly belong to another bucket.
 	// This could happen if e.g. we've unfolded 4 buckets, and all peers in folded bucket 5 really belong in bucket 8.
@@ -147,7 +147,7 @@ func (rt *RoutingTable) nextBucket() {
 }
 
 // Find a specific peer by ID or return nil
-func (rt *RoutingTable) Find(id peer.ID) peer.ID {
+func (rt KRoutingTable) Find(id peer.ID) peer.ID {
 	srch := rt.NearestPeers(ConvertPeerID(id), 1)
 	if len(srch) == 0 || srch[0] != id {
 		return ""
@@ -156,7 +156,7 @@ func (rt *RoutingTable) Find(id peer.ID) peer.ID {
 }
 
 // NearestPeer returns a single peer that is nearest to the given ID
-func (rt *RoutingTable) NearestPeer(id ID) peer.ID {
+func (rt KRoutingTable) NearestPeer(id ID) peer.ID {
 	peers := rt.NearestPeers(id, 1)
 	if len(peers) > 0 {
 		return peers[0]
@@ -167,7 +167,7 @@ func (rt *RoutingTable) NearestPeer(id ID) peer.ID {
 }
 
 // NearestPeers returns a list of the 'count' closest peers to the given ID
-func (rt *RoutingTable) NearestPeers(id ID, count int) []peer.ID {
+func (rt KRoutingTable) NearestPeers(id ID, count int) []peer.ID {
 	cpl := CommonPrefixLen(id, rt.local)
 
 	// It's assumed that this also protects the buckets.
@@ -213,7 +213,7 @@ func (rt *RoutingTable) NearestPeers(id ID, count int) []peer.ID {
 }
 
 // Size returns the total number of peers in the routing table
-func (rt *RoutingTable) Size() int {
+func (rt KRoutingTable) Size() int {
 	var tot int
 	rt.tabLock.RLock()
 	for _, buck := range rt.Buckets {
@@ -224,7 +224,7 @@ func (rt *RoutingTable) Size() int {
 }
 
 // ListPeers takes a RoutingTable and returns a list of all peers from all buckets in the table.
-func (rt *RoutingTable) ListPeers() []peer.ID {
+func (rt KRoutingTable) ListPeers() []peer.ID {
 	var peers []peer.ID
 	rt.tabLock.RLock()
 	for _, buck := range rt.Buckets {
@@ -235,7 +235,7 @@ func (rt *RoutingTable) ListPeers() []peer.ID {
 }
 
 // Print prints a descriptive statement about the provided RoutingTable
-func (rt *RoutingTable) Print() {
+func (rt KRoutingTable) Print() {
 	fmt.Printf("Routing Table, bs = %d, Max latency = %d\n", rt.bucketsize, rt.maxLatency)
 	rt.tabLock.RLock()
 
@@ -250,4 +250,11 @@ func (rt *RoutingTable) Print() {
 		b.lk.RUnlock()
 	}
 	rt.tabLock.RUnlock()
+}
+
+func (rt *KRoutingTable) SetPeerAdded(fn func(id peer.ID)) {
+	rt.PeerAdded = fn
+}
+func (rt *KRoutingTable) SetPeerRemoved(fn func(id peer.ID)) {
+	rt.PeerRemoved = fn
 }

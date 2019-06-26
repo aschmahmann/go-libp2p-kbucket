@@ -3,6 +3,7 @@ package kbucket
 import (
 	"container/list"
 	"sort"
+	"testing"
 
 	"github.com/libp2p/go-libp2p-core/peer"
 )
@@ -24,6 +25,8 @@ func (pds *peerDistanceSorter) Swap(a, b int) { pds.peers[a], pds.peers[b] = pds
 func (pds *peerDistanceSorter) Less(a, b int) bool {
 	return pds.peers[a].distance.less(pds.peers[b].distance)
 }
+
+var Test testing.TB
 
 // Append the peer.ID to the sorter's slice. It may no longer be sorted.
 func (pds *peerDistanceSorter) appendPeer(p peer.ID) {

@@ -51,7 +51,16 @@ func TestBucket(t *testing.T) {
 func TestTableCallbacks(t *testing.T) {
 	local := test.RandPeerIDFatal(t)
 	m := pstore.NewMetrics()
-	rt := NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)
+
+	t.Run("KRoutingTable", func(t *testing.T) {
+		TableCallbacks(t, RoutingTable{NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)})
+	})
+	t.Run("TrieRoutingTable", func(t *testing.T) {
+		TableCallbacks(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)})
+	})
+}
+
+func TableCallbacks(t *testing.T, rt RoutingTable) {
 
 	peers := make([]peer.ID, 100)
 	for i := 0; i < 100; i++ {
@@ -59,12 +68,12 @@ func TestTableCallbacks(t *testing.T) {
 	}
 
 	pset := make(map[peer.ID]struct{})
-	rt.PeerAdded = func(p peer.ID) {
+	rt.SetPeerAdded(func(p peer.ID) {
 		pset[p] = struct{}{}
-	}
-	rt.PeerRemoved = func(p peer.ID) {
+	})
+	rt.SetPeerRemoved(func(p peer.ID) {
 		delete(pset, p)
-	}
+	})
 
 	rt.Update(peers[0])
 	if _, ok := pset[peers[0]]; !ok {
@@ -93,14 +102,23 @@ func TestTableCallbacks(t *testing.T) {
 	}
 }
 
-// Right now, this just makes sure that it doesnt hang or crash
 func TestTableUpdate(t *testing.T) {
 	local := test.RandPeerIDFatal(t)
 	m := pstore.NewMetrics()
-	rt := NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)
 
+	t.Run("KRoutingTable", func(t *testing.T) {
+		TableUpdate(t, RoutingTable{NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)})
+	})
+	t.Run("TrieRoutingTable", func(t *testing.T) {
+		TableUpdate(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)})
+	})
+}
+
+// Right now, this just makes sure that it doesnt hang or crash
+func TableUpdate(t *testing.T, rt RoutingTable) {
 	peers := make([]peer.ID, 100)
 	for i := 0; i < 100; i++ {
+		time.Sleep(time.Millisecond)
 		peers[i] = test.RandPeerIDFatal(t)
 	}
 
@@ -110,6 +128,7 @@ func TestTableUpdate(t *testing.T) {
 	}
 
 	for i := 0; i < 100; i++ {
+		time.Sleep(time.Millisecond)
 		id := ConvertPeerID(test.RandPeerIDFatal(t))
 		ret := rt.NearestPeers(id, 5)
 		if len(ret) == 0 {
@@ -121,10 +140,19 @@ func TestTableUpdate(t *testing.T) {
 func TestTableFind(t *testing.T) {
 	local := test.RandPeerIDFatal(t)
 	m := pstore.NewMetrics()
-	rt := NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)
 
+	t.Run("KRoutingTable", func(t *testing.T) {
+		TableFind(t, RoutingTable{NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)})
+	})
+	t.Run("TrieRoutingTable", func(t *testing.T) {
+		TableFind(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)})
+	})
+}
+
+func TableFind(t *testing.T,  rt RoutingTable) {
 	peers := make([]peer.ID, 100)
 	for i := 0; i < 5; i++ {
+		time.Sleep(time.Millisecond)
 		peers[i] = test.RandPeerIDFatal(t)
 		rt.Update(peers[i])
 	}
@@ -168,10 +196,19 @@ func TestTableEldestPreferred(t *testing.T) {
 func TestTableFindMultiple(t *testing.T) {
 	local := test.RandPeerIDFatal(t)
 	m := pstore.NewMetrics()
-	rt := NewRoutingTable(20, ConvertPeerID(local), time.Hour, m)
 
+	t.Run("KRoutingTable", func(t *testing.T) {
+		TableFindMultiple(t, RoutingTable{NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)})
+	})
+	t.Run("TrieRoutingTable", func(t *testing.T) {
+		TableFindMultiple(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)})
+	})
+}
+
+func TableFindMultiple(t *testing.T, rt RoutingTable) {
 	peers := make([]peer.ID, 100)
 	for i := 0; i < 18; i++ {
+		time.Sleep(time.Millisecond)
 		peers[i] = test.RandPeerIDFatal(t)
 		rt.Update(peers[i])
 	}
