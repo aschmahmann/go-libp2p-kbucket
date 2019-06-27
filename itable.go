@@ -20,17 +20,17 @@ type IRoutingTable interface {
 }
 
 type RoutingTable struct {
-	tb IRoutingTable
+	Rt IRoutingTable
 }
 
-func (rt *RoutingTable) Update(p peer.ID) (evicted peer.ID, err error) {return rt.tb.Update(p)}
-func (rt *RoutingTable) Remove(p peer.ID)                              {rt.tb.Remove(p)}
-func (rt *RoutingTable) Find(id peer.ID) peer.ID                       {return rt.tb.Find(id)}
-func (rt *RoutingTable) NearestPeer(id ID) peer.ID                     {return rt.tb.NearestPeer(id)}
-func (rt *RoutingTable) NearestPeers(id ID, count int) []peer.ID       {return rt.tb.NearestPeers(id, count)}
-func (rt *RoutingTable) Size() int                                     {return rt.tb.Size()}
-func (rt *RoutingTable) ListPeers() []peer.ID                          {return rt.tb.ListPeers()}
-func (rt *RoutingTable) Print()                                        {rt.tb.Print()}
-func (rt *RoutingTable) SetPeerAddedCB(fn func(peer.ID))               {rt.tb.SetPeerAddedCB(fn)}
-func (rt *RoutingTable) SetPeerRemovedCB(fn func(peer.ID))             {rt.tb.SetPeerRemovedCB(fn)}
+func (rt *RoutingTable) Update(p peer.ID) (evicted peer.ID, err error) {return rt.Rt.Update(p)}
+func (rt *RoutingTable) Remove(p peer.ID)                              {rt.Rt.Remove(p)}
+func (rt *RoutingTable) Find(id peer.ID) peer.ID                       {return rt.Rt.Find(id)}
+func (rt *RoutingTable) NearestPeer(id ID) peer.ID                     {return rt.Rt.NearestPeer(id)}
+func (rt *RoutingTable) NearestPeers(id ID, count int) []peer.ID       {return rt.Rt.NearestPeers(id, count)}
+func (rt *RoutingTable) Size() int                                     {return rt.Rt.Size()}
+func (rt *RoutingTable) ListPeers() []peer.ID                          {return rt.Rt.ListPeers()}
+func (rt *RoutingTable) Print()                                        {rt.Rt.Print()}
+func (rt *RoutingTable) SetPeerAddedCB(fn func(peer.ID))               {rt.Rt.SetPeerAddedCB(fn)}
+func (rt *RoutingTable) SetPeerRemovedCB(fn func(peer.ID))             {rt.Rt.SetPeerRemovedCB(fn)}
 

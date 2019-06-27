@@ -10,4 +10,4 @@ require (
 	github.com/multiformats/go-multihash v0.0.1
 )
 
-replace github.com/k-sone/critbitgo v1.2.0 => ../../k-sone/critbitgo
+replace github.com/k-sone/critbitgo => github.com/aschmahmann/critbitgo v1.3.0-alpha
