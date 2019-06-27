@@ -1,6 +1,7 @@
 package kbucket
 
 import (
+	"bytes"
 	"github.com/k-sone/critbitgo"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"sync"
@@ -83,12 +84,12 @@ func (rt *TrieRoutingTable) NearestPeers(id ID, count int) []peer.ID {
 	}
 
 	wid := rt.trie.GetClosest(id)
-	//wid, _, _ := rt.trie.LongestPrefix(id)
-	//if wid == nil {
-	//	wid = rt.trie.GetArbitrary()
-	//}
 
 	rt.trie.Walk(wid, func(key []byte, value interface{}) bool {
+		if afterWalk == 0 && bytes.Equal(wid,id){
+			afterWalk++
+			return true
+		}
 		peers = append(peers, value.(peer.ID))
 		afterWalk++
 		return afterWalk < count
