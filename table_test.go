@@ -68,7 +68,7 @@ func TestTableCallbacks(t *testing.T) {
 		TableCallbacks(t, RoutingTable{NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 	t.Run("TrieRoutingTable", func(t *testing.T) {
-		TableCallbacks(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)}, rng)
+		TableCallbacks(t, RoutingTable{NewTrieRoutingTable()}, rng)
 	})
 }
 
@@ -122,7 +122,7 @@ func TestTableUpdate(t *testing.T) {
 		TableUpdate(t, RoutingTable{NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 	t.Run("TrieRoutingTable", func(t *testing.T) {
-		TableUpdate(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)}, rng)
+		TableUpdate(t, RoutingTable{NewTrieRoutingTable()}, rng)
 	})
 }
 
@@ -156,7 +156,7 @@ func TestTableFind(t *testing.T) {
 		TableFind(t, RoutingTable{NewRoutingTable(10, ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 	t.Run("TrieRoutingTable", func(t *testing.T) {
-		TableFind(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)}, rng)
+		TableFind(t, RoutingTable{NewTrieRoutingTable()}, rng)
 	})
 }
 
@@ -213,7 +213,7 @@ func TestTableFindMultiple(t *testing.T) {
 		TableFindMultiple(t, RoutingTable{NewRoutingTable(20, ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 	t.Run("TrieRoutingTable", func(t *testing.T) {
-		TableFindMultiple(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)}, rng)
+		TableFindMultiple(t, RoutingTable{NewTrieRoutingTable()}, rng)
 	})
 }
 
@@ -240,7 +240,7 @@ func TestTableMultithreaded(t *testing.T) {
 		TableMultithreaded(t, RoutingTable{NewRoutingTable(20, ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 	t.Run("TrieRoutingTable", func(t *testing.T) {
-		TableMultithreaded(t, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)}, rng)
+		TableMultithreaded(t, RoutingTable{NewTrieRoutingTable()}, rng)
 	})
 }
 
@@ -291,7 +291,7 @@ func BenchmarkUpdates(b *testing.B) {
 		Updates(b, RoutingTable{NewRoutingTable(20, ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 	b.Run("TrieRoutingTable", func(b *testing.B) {
-		Updates(b, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)}, rng)
+		Updates(b, RoutingTable{NewTrieRoutingTable()}, rng)
 	})
 }
 
@@ -317,7 +317,7 @@ func BenchmarkFinds(b *testing.B) {
 		Finds(b, RoutingTable{NewRoutingTable(20, ConvertPeerID(local), time.Hour, m)}, rng)
 	})
 	b.Run("TrieRoutingTable", func(b *testing.B) {
-		Finds(b, RoutingTable{NewTrieRoutingTable(ConvertPeerID(local), time.Hour, m)}, rng)
+		Finds(b, RoutingTable{NewTrieRoutingTable()}, rng)
 	})
 }
 

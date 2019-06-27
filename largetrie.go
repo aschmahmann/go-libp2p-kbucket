@@ -3,40 +3,22 @@ package kbucket
 import (
 	"github.com/k-sone/critbitgo"
 	"github.com/libp2p/go-libp2p-core/peer"
-	"github.com/libp2p/go-libp2p-core/peerstore"
 	"sync"
-	"time"
 )
 
 type TrieRoutingTable struct {
 	trie critbitgo.Trie
 
-	// ID of the local peer
-	local ID
-
 	// Blanket lock, refine later for better performance
 	tabLock sync.RWMutex
-
-	// latency metrics
-	metrics peerstore.Metrics
-
-	// Maximum acceptable latency for peers in this cluster
-	maxLatency time.Duration
-
-	// kBuckets define all the fingers to other nodes.
-	Buckets    []*Bucket
-	bucketsize int
 
 	// notification functions
 	PeerRemoved func(peer.ID)
 	PeerAdded   func(peer.ID)
 }
 
-func NewTrieRoutingTable(localID ID, latency time.Duration, m peerstore.Metrics) *TrieRoutingTable {
+func NewTrieRoutingTable() *TrieRoutingTable {
 	return &TrieRoutingTable{
-		local: localID,
-		maxLatency: latency,
-		metrics: m,
 		PeerAdded: func(id peer.ID) {},
 		PeerRemoved: func(id peer.ID) {},
 	}
@@ -45,11 +27,6 @@ func NewTrieRoutingTable(localID ID, latency time.Duration, m peerstore.Metrics)
 func (rt *TrieRoutingTable) Update(p peer.ID) (evicted peer.ID, err error) {
 	rt.tabLock.Lock()
 	defer rt.tabLock.Unlock()
-
-	if rt.metrics.LatencyEWMA(p) > rt.maxLatency {
-		// Connection doesnt meet requirements, skip!
-		return "", ErrPeerRejectedHighLatency
-	}
 
 	rt.trie.Insert(ConvertPeerID(p), p)
 	rt.PeerAdded(p)
