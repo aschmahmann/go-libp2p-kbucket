@@ -335,3 +335,26 @@ func Finds(b *testing.B, rt RoutingTable, rng *rand.Rand) {
 		rt.Find(peers[i])
 	}
 }
+
+func TestTrieNearestPeersNoSelf(t *testing.T){
+	rng := rand.New(rand.NewSource(0))
+	rt := RoutingTable{NewTrieRoutingTable()}
+
+	peers := make([]peer.ID, 100000)
+	for i := 0; i < len(peers); i++ {
+		peers[i] = RandPeerIDFatal(t, rng)
+		rt.Update(peers[i])
+	}
+
+	t.Logf("Searching for peer: '%s'", peers[2])
+	//bat, _ := peers[2].Marshal()
+	//t.Logf("%08x",bat)
+	found := rt.NearestPeers(ConvertPeerID(peers[2]),10)
+	for _, f := range found{
+		//ba, _ := f.Marshal()
+		//t.Logf("% b08",ba)
+		if f==peers[2]{
+			t.Fatal("found me")
+		}
+	}
+}

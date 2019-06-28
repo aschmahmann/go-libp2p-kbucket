@@ -86,10 +86,15 @@ func (rt *TrieRoutingTable) NearestPeers(id ID, count int) []peer.ID {
 	wid := rt.trie.GetClosest(id)
 
 	rt.trie.Walk(wid, func(key []byte, value interface{}) bool {
-		if afterWalk == 0 && bytes.Equal(wid,id){
-			afterWalk++
+		//if afterWalk == 0 && bytes.Equal(wid,id){
+		//	afterWalk++
+		//	return true
+		//}
+
+		if bytes.Equal(key, id){
 			return true
 		}
+
 		peers = append(peers, value.(peer.ID))
 		afterWalk++
 		return afterWalk < count
@@ -101,6 +106,9 @@ func (rt *TrieRoutingTable) NearestPeers(id ID, count int) []peer.ID {
 			return true
 		}
 
+		if bytes.Equal(key, id){
+			return true
+		}
 		peers = append(peers, value.(peer.ID))
 		beforeWalk++
 		return beforeWalk < count
